@@ -1,0 +1,22 @@
+﻿# Archivos y carpetas de Visual Studio
+.vs/
+*.user
+*.suo
+
+# Archivos de compilación
+bin/
+obj/
+
+# Config local
+*.dbmdl
+*.log
+
+# Configuraciones de entorno
+appsettings.Development.json
+
+# Publicaciones
+*.publish/
+
+# Archivos innecesarios
+*.cache
+*.pdb
