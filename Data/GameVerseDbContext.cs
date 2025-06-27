@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using GameVerse.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameVerse.Models;
+namespace GameVerse.Data;
 
 public partial class GameVerseDbContext : DbContext
 {

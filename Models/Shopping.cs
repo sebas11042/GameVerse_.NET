@@ -7,7 +7,7 @@ public partial class Shopping
 {
     public int IdBuy { get; set; }
 
-    public DateOnly? BuyDate { get; set; }
+    public DateTime? BuyDate { get; set; }
 
     public int? Total { get; set; }
 

@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using GameVerse.Models; // 👈 Ajustá este namespace si el tuyo es diferente
+using GameVerse.Data; // 👈 Ajustá este namespace si el tuyo es diferente
 
 var builder = WebApplication.CreateBuilder(args);
 

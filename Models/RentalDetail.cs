@@ -11,9 +11,9 @@ public partial class RentalDetail
 
     public int? Amount { get; set; }
 
-    public DateOnly? RentalDate { get; set; }
+    public DateTime? RentalDate { get; set; }
 
-    public DateOnly? ExpireDate { get; set; }
+    public DateTime? ExpireDate { get; set; }
 
     public int? Price { get; set; }
 
