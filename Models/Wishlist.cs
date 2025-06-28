@@ -9,7 +9,7 @@ public partial class Wishlist
 
     public int IdGame { get; set; }
 
-    public DateOnly? AddedAt { get; set; }
+    public DateTime? AddedAt { get; set; }
 
     public virtual Game IdGameNavigation { get; set; } = null!;
 
