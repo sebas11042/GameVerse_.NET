@@ -209,8 +209,9 @@ public partial class GameVerseDbContext : DbContext
             entity.HasKey(e => e.IdUser).HasName("PK__Users__D2D14637154F8C6B");
 
             entity.Property(e => e.IdUser)
-                .ValueGeneratedNever()
+                .ValueGeneratedOnAdd() 
                 .HasColumnName("id_user");
+
             entity.Property(e => e.Email)
                 .HasMaxLength(255)
                 .HasColumnName("email");

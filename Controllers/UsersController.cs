@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GameVerse.Models;
 using GameVerse.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameVerse.Controllers
 {
@@ -22,6 +23,7 @@ namespace GameVerse.Controllers
         }
 
         // GET: api/Users
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<IEnumerable<User>>> GetUsers()
         {
@@ -140,5 +142,12 @@ namespace GameVerse.Controllers
                 ShoppingCart = cartGames
             });
         }
+        [Authorize(Roles = "admin")]
+        [HttpGet("admin-only")]
+        public IActionResult AdminOnly()
+        {
+            return Ok("Bienvenido, administrador. Tenés acceso exclusivo.");
+        }
+
     }
 }
