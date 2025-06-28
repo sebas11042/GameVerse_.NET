@@ -7,11 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GameVerse.Models;
 using GameVerse.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameVerse.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "admin")]
     public class CategoriesController : ControllerBase
     {
         private readonly GameVerseDbContext _context;

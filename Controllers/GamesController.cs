@@ -2,11 +2,13 @@
 using GameVerse.Models;
 using Microsoft.EntityFrameworkCore;
 using GameVerse.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace GameVerseSQL.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "admin")]
     public class GamesController : ControllerBase
     {
         private readonly GameVerseDbContext _context;

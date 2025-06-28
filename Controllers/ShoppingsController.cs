@@ -7,11 +7,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GameVerse.Models;
 using GameVerse.Data;
+using Microsoft.AspNetCore.Authorization; // 👈 IMPORTANTE
+
 
 namespace GameVerse.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class ShoppingsController : ControllerBase
     {
         private readonly GameVerseDbContext _context;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization; // 👈 IMPORTANTE
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ namespace GameVerse.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize] // 👈 Protege todo el controlador para usuarios autenticados
     public class WishlistsController : ControllerBase
     {
         private readonly GameVerseDbContext _context;
@@ -33,7 +35,7 @@ namespace GameVerse.Controllers
             return wislists;
         }
 
-        // POST: api/Wishlists
+        // POST: api/Wishlists/add
         [HttpPost("add")]
         public async Task<ActionResult<Wishlist>> AddWishlist([FromQuery] int idUser, [FromQuery] int IdGame)
         {
@@ -54,7 +56,7 @@ namespace GameVerse.Controllers
             return Ok("Agregado a wishlist");
         }
 
-        // DELETE: api/Wishlists/5
+        // DELETE: api/Wishlists/remove
         [HttpDelete("remove")]
         public async Task<IActionResult> DeleteWishlist([FromQuery] int userId, [FromQuery] int gameId)
         {
