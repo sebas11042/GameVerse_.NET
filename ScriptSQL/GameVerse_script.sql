@@ -1,7 +1,8 @@
 
+
 IF DB_ID('GameVerseDB') IS NOT NULL
 BEGIN
-    ALTER DATABASE GameVerseDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    ALTER DATABASE GameVerseDB SET MULTI_USER WITH ROLLBACK IMMEDIATE;
     DROP DATABASE GameVerseDB;
 END
 
@@ -13,13 +14,25 @@ USE GameVerseDB;
 GO
 
 -- Tabla: Users
+DROP TABLE IF EXISTS Wishlist;
+DROP TABLE IF EXISTS Shopping_Cart;
+DROP TABLE IF EXISTS Rental_Detail;
+DROP TABLE IF EXISTS Rentals;
+DROP TABLE IF EXISTS Purchase_Detail;
+DROP TABLE IF EXISTS Shopping;
+DROP TABLE IF EXISTS Games_Category;
+DROP TABLE IF EXISTS Games;
+DROP TABLE IF EXISTS Categories;
+DROP TABLE IF EXISTS Users;  -- Ahora sí se puede borrar
+
 CREATE TABLE Users (
-    id_user INT PRIMARY KEY,
+    id_user INT IDENTITY(1,1) PRIMARY KEY, -- ✅ Autoincremental
     email NVARCHAR(255),
     password NVARCHAR(255),
     rol NVARCHAR(255),
     username NVARCHAR(255)
 );
+
 
 -- Tabla: Categories
 CREATE TABLE Categories (
@@ -118,9 +131,6 @@ CREATE TABLE Wishlist (
 
 -- INSERSIONES
 
-INSERT INTO Users (id_user, email, password, rol, username) VALUES
-(1, 'admin@gameverse.com', 'admin123', 'admin', 'admin'),
-(2, 'user1@gameverse.com', 'user123', 'user', 'user1');
 
 INSERT INTO Categories (id_category, name) VALUES
 (1, 'Plataforma'),
@@ -136,3 +146,12 @@ INSERT INTO Games_Category (id_game, id_category) VALUES
 (2, 2);
 
 SELECT * FROM Games;
+
+INSERT INTO Users (email, password, rol, username) VALUES
+('admin@gameverse.com', 'admin123', 'admin', 'admin'),
+('user1@gameverse.com', 'user123', 'user', 'user1');
+
+
+DELETE FROM Users;
+SELECT * FROM Users;
+
