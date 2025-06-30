@@ -4,7 +4,6 @@ using GameVerse.Models;
 using GameVerse.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Localization;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -16,13 +15,11 @@ namespace GameVerse.Controllers
     {
         private readonly GameVerseDbContext _context;
         private readonly JwtService _jwtService;
-        private readonly IStringLocalizer<AuthController> _localizer;
 
-        public AuthController(GameVerseDbContext context, JwtService jwtService, IStringLocalizer<AuthController> localizer)
+        public AuthController(GameVerseDbContext context, JwtService jwtService)
         {
             _context = context;
             _jwtService = jwtService;
-            _localizer = localizer;
         }
 
         // POST: api/auth/register
@@ -30,7 +27,7 @@ namespace GameVerse.Controllers
         public async Task<IActionResult> Register(RegisterDto dto)
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-                return Conflict(new { message = _localizer["EmailAlreadyRegistered"] });
+                return Conflict("El correo ya está registrado.");
 
             var user = new User
             {
@@ -43,7 +40,7 @@ namespace GameVerse.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = _localizer["UserRegistered"] });
+            return Ok("Usuario registrado con éxito.");
         }
 
 
@@ -53,12 +50,20 @@ namespace GameVerse.Controllers
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == credentials.Email);
             if (user == null || !VerifyPassword(credentials.Password!, user.Password!))
-                return Unauthorized(new { message = _localizer["InvalidCredentials"] });
+                return Unauthorized("Credenciales inválidas.");
 
             var token = _jwtService.GenerateToken(user);
-            return Ok(new { token });
+
+            return Ok(new
+            {
+                token,
+                idUser = user.IdUser,
+                username = user.Username 
+            });
         }
 
+
+        // Encripta la contraseña usando SHA256 (puedes cambiar a BCrypt si quieres más seguridad)
         private string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();

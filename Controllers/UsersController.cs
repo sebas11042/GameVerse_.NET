@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using GameVerse.Models;
 using GameVerse.Data;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Localization;
 
 namespace GameVerse.Controllers
 {
@@ -18,11 +17,9 @@ namespace GameVerse.Controllers
     {
         private readonly GameVerseDbContext _context;
 
-        private readonly IStringLocalizer<UsersController> _localizer;
-        public UsersController(GameVerseDbContext context, IStringLocalizer<UsersController> localizer)
+        public UsersController(GameVerseDbContext context)
         {
             _context = context;
-            _localizer = localizer;
         }
 
         // GET: api/Users
@@ -41,10 +38,10 @@ namespace GameVerse.Controllers
 
             if (user == null)
             {
-                return NotFound(new { message = _localizer["UserNotFound"] });
+                return NotFound();
             }
 
-            return Ok(user);
+            return user;
         }
 
         // PUT: api/Users/5
@@ -53,7 +50,7 @@ namespace GameVerse.Controllers
         {
             if (id != user.IdUser)
             {
-                return BadRequest(new { message = _localizer["UserIdMismatch"] });
+                return BadRequest();
             }
 
             _context.Entry(user).State = EntityState.Modified;
@@ -66,7 +63,7 @@ namespace GameVerse.Controllers
             {
                 if (!UserExists(id))
                 {
-                    return NotFound(new { message = _localizer["UserNotFound"] });
+                    return NotFound();
                 }
                 else
                 {
@@ -74,7 +71,7 @@ namespace GameVerse.Controllers
                 }
             }
 
-            return Ok(new { message = _localizer["UserUpdate"] });
+            return NoContent();
         }
 
         // POST: api/Users
@@ -83,13 +80,13 @@ namespace GameVerse.Controllers
         {
             if (_context.Users.Any(u => u.Email == user.Email))
             {
-                return Conflict(new { message = _localizer["EmailAlreadyExists"] });
+                return Conflict("El correo ya está registrado.");
             }
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetUserById), new { id = user.IdUser }, new { message = _localizer["UserCreated"], data = user });
+            return CreatedAtAction(nameof(GetUserById), new { id = user.IdUser }, user);
         }
 
         // DELETE: api/Users/5
@@ -99,13 +96,13 @@ namespace GameVerse.Controllers
             var user = await _context.Users.FindAsync(id);
             if (user == null)
             {
-                return NotFound(new { message = _localizer["UserNotFound"] });
+                return NotFound();
             }
 
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = _localizer["UserDeleted"] });
+            return NoContent();
         }
 
         private bool UserExists(int id)
@@ -124,7 +121,7 @@ namespace GameVerse.Controllers
         {
             var user = await _context.Users.FindAsync(id);
             if (user == null)
-                return NotFound(new { message = _localizer["UserNotFound"] });
+                return NotFound();
 
             var wishlistGames = await _context.Wishlists
                 .Where(w => w.IdUser == id)
@@ -149,7 +146,7 @@ namespace GameVerse.Controllers
         [HttpGet("admin-only")]
         public IActionResult AdminOnly()
         {
-            return Ok(new { message = _localizer["AdminWelcome"] });
+            return Ok("Bienvenido, administrador. Tenés acceso exclusivo.");
         }
 
     }
