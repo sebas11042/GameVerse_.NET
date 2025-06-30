@@ -1,61 +1,126 @@
-﻿import React, { useEffect } from "react";
-import useGames from "../hooks/UseGames";
+﻿/// <reference path="newgame.jsx" />
+import React, { useEffect } from "react";
+import { Link } from "react-router-dom";
+import useGames from "../hooks/useGames";
+import '../assets/css/style.css';
 
 function Home() {
     const { games, loading } = useGames();
+
+    // Función para agregar al carrito
+    const handleAddToCart = async (idGame) => {
+        const token = localStorage.getItem("token");
+        try {
+            const response = await fetch("/cart/add", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(token && { "Authorization": `Bearer ${token}` })
+                },
+                body: JSON.stringify({ idGame, amount: 1 })
+            });
+            if (response.ok) {
+                alert("Juego agregado al carrito");
+            } else {
+                alert("Error al agregar al carrito");
+            }
+        } catch (error) {
+            alert("Error de red al agregar al carrito");
+        }
+    };
 
     useEffect(() => {
         console.log("Juegos cargados:", games);
         const token = localStorage.getItem("token");
         console.log("Token actual:", token);
     }, [games]);
-
     return (
         <div>
             {/* Slider principal */}
-            <div id="carousel" className="section">
+            <div id="top-header">
                 <div className="container">
-                    <div className="row">
-                        <div className="col-md-12">
-                            <div id="home-slick">
-                                <div className="banner banner-1">
-                                    <img src="/assets/img/banner01.jpg" alt="Banner 1" />
-                                    <div className="banner-caption text-center">
-                                        <h1 className="primary-color">BIENVENIDO A GAMEVERSE</h1>
-                                        <button className="btn btn-warning">Explorar juegos</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    <ul className="header-links pull-right">
+                        <li>
+                            <a href="https://g.co/kgs/LZZZ8K4">
+                                <i className="fa fa-dollar"></i> USD
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/Login">
+                                <i className="fa fa-user-o"></i> Iniciar Sesión
+                            </a>
+                        </li>
+
+                        <li>
+                            <a href="/library"><i class="fa fa-book">
+
+                            </i> Mi Biblioteca</a>
+                        </li>
+
+                        <li>
+                            <Link to="/NewGame"><i className="fa fa-plus"></i> Agregar Juego</Link>
+                        </li>
+
+
+                        <li>
+                            <a href="/categories/CreateCategory"><i class="fa fa-plus"></i> Agregar Categoria</a>
+                        </li>
+
+                        <li>
+                            <a href="/InicioSecion/listUser"><i class="fa fa-user-o"></i>Accounts</a>
+                        </li>
+
+                    </ul>
                 </div>
             </div>
 
-            {/* Sección destacada */}
-            <div className="section">
+            <br /><br />
+
+            <div id="header">
                 <div className="container">
                     <div className="row">
-                        <div className="col-md-4">
-                            <div className="feature">
-                                <i className="fa fa-rocket"></i>
-                                <h3>Lanzamientos</h3>
-                                <p>Los juegos más nuevos del mercado disponibles para vos.</p>
+                        <div className="col-md-3">
+                            <div className="header-logo">
                             </div>
                         </div>
-                        <div className="col-md-4">
-                            <div className="feature">
-                                <i className="fa fa-tags"></i>
-                                <h3>Descuentos</h3>
-                                <p>Promociones exclusivas para miembros registrados.</p>
+
+                        <div className="col-md-6">
+                            <div className="header-search">
+                                <form action="/Game/search" method="get">
+                                    <select name="idCategory" className="input-select">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                    <input
+                                        className="input"
+                                        name="name"
+                                        placeholder="Search here"
+                                    />
+                                    <input type="hidden" name="exact" value="false" />
+                                    <button className="search-btn">Search</button>
+                                </form>
                             </div>
                         </div>
-                        <div className="col-md-4">
-                            <div className="feature">
-                                <i className="fa fa-star"></i>
-                                <h3>Recomendados</h3>
-                                <p>Juegos destacados seleccionados especialmente para vos.</p>
+
+                        <div className="col-md-3 clearfix">
+                            <div className="header-ctn">
+                                <div className="dropdown">
+                                    <a className="dropdown-toggle" href="/wishlist/1">
+                                        <i className="fa fa-heart-o"></i>
+                                        <span>Your Wishlist</span>
+                                        <div className="qty">0</div>
+                                    </a>
+                                </div>
+
+                                <div className="dropdown">
+                                    <a className="dropdown-toggle" href="/cart">
+                                        <i className="fa fa-shopping-cart"></i>
+                                        <span>Your Cart</span>
+                                        <div className="qty">0</div>
+                                    </a>
+                                </div>
                             </div>
                         </div>
+
                     </div>
                 </div>
             </div>
@@ -111,6 +176,16 @@ function Home() {
                                                     <span className="tooltipp">Ver más</span>
                                                 </button>
                                             </div>
+                                            {/* Botón ADD TO CART debajo de los botones de producto */}
+                                            <div className="add-to-cart" style={{ marginTop: "10px" }}>
+                                                <button
+                                                    type="button"
+                                                    className="add-to-cart-btn"
+                                                    onClick={() => handleAddToCart(game.idGame)}
+                                                >
+                                                    <i className="fa fa-shopping-cart"></i> ADD TO CART
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -119,6 +194,8 @@ function Home() {
                     </div>
                 </div>
             </div>
+
+            {/* FOOTER */}
         </div>
     );
 }

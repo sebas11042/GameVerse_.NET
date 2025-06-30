@@ -53,7 +53,7 @@ function LoginForm() {
             localStorage.setItem("token", data.token);
 
             alert("Inicio de sesión exitoso.");
-            window.location.href = "/";
+            window.location.href = "/home";
 
         } catch (error) {
             console.error("Error de red al iniciar sesión:", error);
@@ -99,12 +99,6 @@ function LoginForm() {
                     <div className="container">
                         <div className="row">
                             <div className="col-md-3">
-                                <div className="header-logo">
-                                    <a href="/" className="logo">
-                                        <img src="/assets/img/LOGO.png" alt="Logo" />
-
-                                    </a>
-                                </div>
                             </div>
 
                             <div className="login-container">

@@ -1101,6 +1101,16 @@ textarea.input {
   visibility: visible;
 }
 
+/* Oculta el botón por defecto */
+.product .add-to-cart-btn {
+    display: none;
+}
+
+/* Muestra el botón solo cuando el mouse está sobre el div .product */
+.product:hover .add-to-cart-btn {
+    display: inline-block;
+}
+
 /*----------------------------*\
 	Widget product
 \*----------------------------*/

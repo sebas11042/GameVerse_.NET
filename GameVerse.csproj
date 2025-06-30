@@ -17,4 +17,9 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="gameverse-frontend\src\assets\games\canvas-tetris-master\.quadnix\build.yml" />
+    <None Include="gameverse-frontend\src\assets\games\hextris-gh-pages\.github\FUNDING.yml" />
+  </ItemGroup>
+
 </Project>
