@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import createGame from "../hooks/useNewGame";
 
-
 function GameForm() {
     const [formData, setFormData] = useState({
+        id: "",
         name: "",
         title: "",
         image: "",
         priceBuy: "",
+        priceRent: "",
         url: "",
         description: "",
         categories: []
@@ -54,6 +55,12 @@ function GameForm() {
         <div className="login-container">
             <h2>Agregar Nuevo Juego</h2>
             <form onSubmit={handleSubmit}>
+
+                <div className="form-group">
+                    <label htmlFor="id">ID:</label>
+                    <input type="number" id="id" name="id" value={formData.id} onChange={handleChange} required />
+                </div>
+
                 <div className="form-group">
                     <label htmlFor="name">Nombre:</label>
                     <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} required />
@@ -72,6 +79,11 @@ function GameForm() {
                 <div className="form-group">
                     <label htmlFor="priceBuy">Precio de compra:</label>
                     <input type="number" id="priceBuy" name="priceBuy" value={formData.priceBuy} onChange={handleChange} required />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="priceRent">Precio de renta:</label>
+                    <input type="number" id="priceRent" name="priceRent" value={formData.priceRent} onChange={handleChange} required />
                 </div>
 
                 <div className="form-group">
