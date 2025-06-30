@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using GameVerse.Models;
 using GameVerse.Data;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Localization;
 
 namespace GameVerse.Controllers
 {
@@ -18,9 +19,12 @@ namespace GameVerse.Controllers
     {
         private readonly GameVerseDbContext _context;
 
-        public ShoppingCartsController(GameVerseDbContext context)
+        private readonly IStringLocalizer<ShoppingCartsController> _localizer;
+
+        public ShoppingCartsController(GameVerseDbContext context, IStringLocalizer<ShoppingCartsController> localizer)
         {
             _context = context;
+            _localizer = localizer;
         }
 
         // GET: api/ShoppingCarts
@@ -40,9 +44,9 @@ namespace GameVerse.Controllers
                                      .ToListAsync();
 
             if (cart == null || cart.Count == 0)
-                return NotFound();
+                return NotFound(new { message = _localizer["ShoppingCartNotFound"] });
 
-            return cart;
+            return Ok(cart);
         }
 
         // POST: api/ShoppingCarts/add
@@ -51,11 +55,11 @@ namespace GameVerse.Controllers
         {
             var existing = await _context.ShoppingCarts.FindAsync(idUser, idGame);
             if (existing != null)
-                return Conflict("Este juego ya está en el carrito.");
+                return Conflict(new { message = _localizer["GameAlreadyInCart"] });
 
             var game = await _context.Games.FindAsync(idGame);
             if (game == null)
-                return NotFound("Juego no encontrado.");
+                return NotFound(new { message = _localizer["GameNotFound"] });
 
             var cartItem = new ShoppingCart
             {
@@ -68,7 +72,7 @@ namespace GameVerse.Controllers
             _context.ShoppingCarts.Add(cartItem);
             await _context.SaveChangesAsync();
 
-            return Ok(cartItem);
+            return Ok(new { message = _localizer["GameAddedToCart"], data = cartItem });
         }
 
 
@@ -79,12 +83,12 @@ namespace GameVerse.Controllers
             var cartItem = await _context.ShoppingCarts.FindAsync(userId, gameId);
 
             if (cartItem == null)
-                return NotFound("Elemento no encontrado en el carrito.");
+                return NotFound(new { message = _localizer["ItemNotInCart"] });
 
             _context.ShoppingCarts.Remove(cartItem);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = _localizer["ItemRemovedFromCart"] });
         }
 
         [HttpDelete("clear/{idUser}")]
@@ -96,12 +100,12 @@ namespace GameVerse.Controllers
 
 
             if (!cartItems.Any())
-                return NotFound("No hay elementos en el carrito para eliminar.");
+                return NotFound(new { message = _localizer["NoItemsToRemove"] });
 
             _context.ShoppingCarts.RemoveRange(cartItems);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = _localizer["CartCleared"] });
         }
 
         // GET: api/ShoppingCarts/total/5
@@ -115,10 +119,10 @@ namespace GameVerse.Controllers
 
 
             if (cartItems.Count == 0)
-                return NotFound("El carrito está vacío.");
+                return NotFound(new { message = _localizer["CartIsEmpty"] });
 
             var total = cartItems.Sum(item => (item.IdGameNavigation.PriceBuy ?? 0) * item.Amount);
-            return Ok(total);
+            return Ok(new { message = _localizer["TotalCalculated"], total });
         }
 
         private bool ShoppingCartExists(int id)

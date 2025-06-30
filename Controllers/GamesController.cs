@@ -3,6 +3,7 @@ using GameVerse.Models;
 using Microsoft.EntityFrameworkCore;
 using GameVerse.Data;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Localization;
 
 namespace GameVerseSQL.Controllers
 {
@@ -13,16 +14,25 @@ namespace GameVerseSQL.Controllers
     {
         private readonly GameVerseDbContext _context;
 
-        public GamesController(GameVerseDbContext context)
+        private readonly IStringLocalizer<GamesController> _localizer;
+        public GamesController(GameVerseDbContext context, IStringLocalizer<GamesController> localizer)
         {
             _context = context;
+            _localizer = localizer;
         }
 
         // GET: api/games
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Game>>> GetGames()
         {
-            return await _context.Games.Include(g => g.IdCategories).ToListAsync();
+            var games = await _context.Games.Include(g => g.IdCategories).ToListAsync();
+
+            if (games == null || games.Count == 0)
+            {
+                return NotFound(new { message = _localizer["NoGamesFound"] });
+            }
+
+            return Ok(games);
         }
 
         // GET: api/games/5
@@ -33,10 +43,10 @@ namespace GameVerseSQL.Controllers
 
             if (game == null)
             {
-                return NotFound();
+                return NotFound(new { message = _localizer["GamesNotFound"] });
             }
 
-            return game;
+            return Ok(game);
         }
 
         // POST: api/games
@@ -49,7 +59,7 @@ namespace GameVerseSQL.Controllers
             _context.Games.Add(game);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetById), new { id = game.IdGame }, game);
+            return CreatedAtAction(nameof(GetById), new { id = game.IdGame }, new { message = _localizer["GamesCreated"], data = game });
         }
 
         // PUT: api/games/5
@@ -58,28 +68,28 @@ namespace GameVerseSQL.Controllers
         {
             if (id != game.IdGame)
             {
-                return BadRequest("ID no coincide.");
+                return BadRequest(new {message = _localizer["GameIdMismatch"] });
             }
 
             var existingGame = await _context.Games.Include(g => g.IdCategories).FirstOrDefaultAsync(g => g.IdGame == id);
 
             if (existingGame == null)
             {
-                return NotFound();
-
-                existingGame.Name = game.Name;
-                existingGame.Description = game.Description;
-                existingGame.Title = game.Title;
-                existingGame.Url = game.Url;
-                existingGame.Image = game.Image;
-                existingGame.PriceBuy = game.PriceBuy;
-                existingGame.PriceRental = game.PriceRental;
-                existingGame.IdCategories = await _context.Categories.Where(c => idCategories.Contains(c.IdCategory)).ToListAsync();
+                return NotFound(new {message = _localizer["GameNotFound"] });
             }
+
+            existingGame.Name = game.Name;
+            existingGame.Description = game.Description;
+            existingGame.Title = game.Title;
+            existingGame.Url = game.Url;
+            existingGame.Image = game.Image;
+            existingGame.PriceBuy = game.PriceBuy;
+            existingGame.PriceRental = game.PriceRental;
+            existingGame.IdCategories = await _context.Categories.Where(c => idCategories.Contains(c.IdCategory)).ToListAsync();
 
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new {message = _localizer["GameUpdated"] });
         }
 
         // DELETE: api/games/5
@@ -87,15 +97,16 @@ namespace GameVerseSQL.Controllers
         public async Task<IActionResult> DeleteGame(int id)
         {
             var game = await _context.Games.FindAsync(id);
+
             if (game == null)
             {
-                return NotFound();
+                return NotFound(new {message = _localizer["GameNotFound"] });
             }
 
             _context.Games.Remove(game);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = _localizer["GameDeleted"] });
         }
 
         [HttpGet("search")]
@@ -123,9 +134,9 @@ namespace GameVerseSQL.Controllers
 
             if (games == null || !games.Any())
             {
-                return NotFound();
+                return NotFound(new {message = _localizer["GameNotFound"] });
             }
-            return games;
+            return Ok(games);
         }
     }
 }

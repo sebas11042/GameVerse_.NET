@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using GameVerse.Models;
 using GameVerse.Data;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Localization;
 
 namespace GameVerse.Controllers
 {
@@ -17,10 +18,12 @@ namespace GameVerse.Controllers
     public class RentalsController : ControllerBase
     {
         private readonly GameVerseDbContext _context;
+        private readonly IStringLocalizer<RentalsController> _localizer;
 
-        public RentalsController(GameVerseDbContext context)
+        public RentalsController(GameVerseDbContext context, IStringLocalizer<RentalsController> localizer)
         {
             _context = context;
+            _localizer = localizer;
         }
 
         // GET: api/Rentals
@@ -45,7 +48,7 @@ namespace GameVerse.Controllers
                 .FirstOrDefaultAsync(r => r.IdRent == id);
 
             if (rental == null)
-                return NotFound();
+                return NotFound(new { message = _localizer["RentalNotFound"] });
 
             return rental;
         }
@@ -55,14 +58,14 @@ namespace GameVerse.Controllers
         public async Task<IActionResult> UpdateRental(int id, Rental rental)
         {
             if (id != rental.IdRent)
-                return BadRequest("ID no coincide.");
+                return BadRequest(new { message = _localizer["RentalIdMismatch"] });
 
             var existingRental = await _context.Rentals
                 .Include(r => r.RentalDetails)
                 .FirstOrDefaultAsync(r => r.IdRent == id);
 
             if (existingRental == null)
-                return NotFound();
+                return NotFound(new { message = _localizer["RentalNotFound"] });
 
             existingRental.RentDays = rental.RentDays;
             existingRental.EndDate = existingRental.StartDate?.AddDays(rental.RentDays ?? 0);
@@ -82,7 +85,7 @@ namespace GameVerse.Controllers
                 (d.Price ?? 0) * (d.Amount ?? 0) * (rental.RentDays ?? 0));
 
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(new { message = _localizer["RentalUpdated"] });
         }
 
         // POST: api/Rentals
@@ -90,10 +93,10 @@ namespace GameVerse.Controllers
         public async Task<ActionResult<Rental>> StoreRental(Rental rental)
         {
             if (rental.RentDays != 3 && rental.RentDays != 7 && rental.RentDays != 15)
-                return BadRequest("Solo se permiten 3, 7 o 15 días de renta.");
+                return BadRequest(new { message = _localizer["InvalidRentDays"] });
 
             if (rental.IdUser == null)
-                return BadRequest("Se requiere un usuario válido.");
+                return BadRequest(new { message = _localizer["UserRequired"] });
 
             rental.StartDate = DateTime.Today;
             rental.EndDate = DateTime.Today.AddDays(rental.RentDays ?? 0);
@@ -112,7 +115,7 @@ namespace GameVerse.Controllers
             _context.Rentals.Add(rental);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetRentalById), new { id = rental.IdRent }, rental);
+            return CreatedAtAction(nameof(GetRentalById), new { id = rental.IdRent }, new {message = _localizer["RentalCreated"], data = rental });
         }
 
         // DELETE: api/Rentals/5
@@ -122,22 +125,29 @@ namespace GameVerse.Controllers
             var rental = await _context.Rentals.FindAsync(id);
 
             if (rental == null)
-                return NotFound();
+                return NotFound(new { message = _localizer["RentalNotFound"] });
 
             _context.Rentals.Remove(rental);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new {message = _localizer["RentalDeleted"] });
         }
 
         [HttpGet("user/{idUser}")]
         public async Task<ActionResult<IEnumerable<Rental>>> GetRentalsByUser(int idUser)
         {
-            return await _context.Rentals
+            var rentals = await _context.Rentals
                 .Include(r => r.RentalDetails)
                     .ThenInclude(rd => rd.IdGameNavigation)
                 .Where(r => r.IdUser == idUser)
                 .ToListAsync();
+
+            if (rentals == null || rentals.Count == 0)
+            {
+                return NotFound(new { message = _localizer["NoRentalsFoundForUser"] });
+            }
+
+            return Ok(rentals);
         }
         private bool RentalExists(int id)
         {

@@ -4,6 +4,7 @@ using GameVerse.Models;
 using GameVerse.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Localization;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -15,11 +16,13 @@ namespace GameVerse.Controllers
     {
         private readonly GameVerseDbContext _context;
         private readonly JwtService _jwtService;
+        private readonly IStringLocalizer<AuthController> _localizer;
 
-        public AuthController(GameVerseDbContext context, JwtService jwtService)
+        public AuthController(GameVerseDbContext context, JwtService jwtService, IStringLocalizer<AuthController> localizer)
         {
             _context = context;
             _jwtService = jwtService;
+            _localizer = localizer;
         }
 
         // POST: api/auth/register
@@ -27,7 +30,7 @@ namespace GameVerse.Controllers
         public async Task<IActionResult> Register(RegisterDto dto)
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-                return Conflict("El correo ya está registrado.");
+                return Conflict(new { message = _localizer["EmailAlreadyRegistered"] });
 
             var user = new User
             {
@@ -40,7 +43,7 @@ namespace GameVerse.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok("Usuario registrado con éxito.");
+            return Ok(new { message = _localizer["UserRegistered"] });
         }
 
 
@@ -50,7 +53,7 @@ namespace GameVerse.Controllers
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == credentials.Email);
             if (user == null || !VerifyPassword(credentials.Password!, user.Password!))
-                return Unauthorized("Credenciales inválidas.");
+                return Unauthorized(new { message = _localizer["InvalidCredentials"] });
 
             var token = _jwtService.GenerateToken(user);
             return Ok(new { token });

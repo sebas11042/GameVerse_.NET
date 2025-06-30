@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using GameVerse.Models;
 using GameVerse.Data;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Localization;
 
 namespace GameVerse.Controllers
 {
@@ -18,16 +19,26 @@ namespace GameVerse.Controllers
     {
         private readonly GameVerseDbContext _context;
 
-        public CategoriesController(GameVerseDbContext context)
+        private readonly IStringLocalizer<CategoriesController> _localizer;
+
+        public CategoriesController(GameVerseDbContext context, IStringLocalizer<CategoriesController> localizer)
         {
             _context = context;
+            _localizer = localizer;
         }
 
         // GET: api/Categories
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
         {
-            return await _context.Categories.Include(c => c.IdGames).ToListAsync();
+            var categories = await _context.Categories.Include(c => c.IdGames).ToListAsync();
+
+            if (categories == null || categories.Count == 0)
+            {
+                return NotFound(new { message = _localizer["NoCategoriesFound"] });
+            }
+
+            return Ok(categories);
         }
 
         // GET: api/Categories/5
@@ -38,10 +49,10 @@ namespace GameVerse.Controllers
 
             if (category == null)
             {
-                return NotFound();
+                return NotFound(new { message = _localizer["CategoryNotFound"] });
             }
 
-            return category;
+            return Ok(category);
         }
 
         // PUT: api/Categories/5
@@ -50,7 +61,7 @@ namespace GameVerse.Controllers
         {
             if (id != category.IdCategory)
             {
-                return BadRequest();
+                return BadRequest(new { message = _localizer["CategoryIdMismatch"] });
             }
 
             _context.Entry(category).State = EntityState.Modified;
@@ -63,7 +74,7 @@ namespace GameVerse.Controllers
             {
                 if (!CategoryExists(id))
                 {
-                    return NotFound();
+                    return NotFound(new { message = _localizer["CategoryNotFound"] });
                 }
                 else
                 {
@@ -71,7 +82,7 @@ namespace GameVerse.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(new { message = _localizer["CategoryUpdated"] });
         }
 
         // POST: api/Categories
@@ -81,7 +92,7 @@ namespace GameVerse.Controllers
             _context.Categories.Add(category);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetCategoryById), new { id = category.IdCategory }, category);
+            return CreatedAtAction(nameof(GetCategoryById), new { id = category.IdCategory }, new { message = _localizer["CategoryCreated"], data = category });
         }
 
         // DELETE: api/Categories/5
@@ -92,34 +103,40 @@ namespace GameVerse.Controllers
 
             if (category == null)
             {
-                return NotFound();
+                return NotFound(new { message = _localizer["CategoryNotFound"] });
             }
 
             _context.Categories.Remove(category);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = _localizer["CategoryDeleted"] });
         }
 
         [HttpGet("search")]
         public async Task<ActionResult<IEnumerable<Category>>> Search(string name, bool exact = false)
         {
+            List<Category> result;
             if (exact)
             {
-                var result = await _context.Categories
-                    .Where(c => c.Name == name)
-                    .Include(c => c.IdGames)
-                    .ToListAsync();
-                return Ok(result);
+                result = await _context.Categories
+                   .Where(c => c.Name == name)
+                   .Include(c => c.IdGames)
+                   .ToListAsync();
             }
             else
             {
-                var result = await _context.Categories
-                    .Where(c => c.Name.Contains(name))
-                    .Include(c => c.IdGames)
-                    .ToListAsync();
-                return Ok(result);
+                result = await _context.Categories
+                   .Where(c => c.Name.Contains(name))
+                   .Include(c => c.IdGames)
+                   .ToListAsync();
             }
+
+            if (result == null || result.Count == 0)
+            {
+                return NotFound(new { message = _localizer["NoMatchesFound"] });
+            }
+
+            return Ok(result);
         }
 
         private bool CategoryExists(int id)

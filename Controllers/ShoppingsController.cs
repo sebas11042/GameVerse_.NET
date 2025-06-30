@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using GameVerse.Models;
 using GameVerse.Data;
-using Microsoft.AspNetCore.Authorization; // 👈 IMPORTANTE
-
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Localization;
 
 namespace GameVerse.Controllers
 {
@@ -19,20 +19,29 @@ namespace GameVerse.Controllers
     {
         private readonly GameVerseDbContext _context;
 
-        public ShoppingsController(GameVerseDbContext context)
+        private readonly IStringLocalizer<ShoppingsController> _localizer;
+        public ShoppingsController(GameVerseDbContext context, IStringLocalizer<ShoppingsController> localizer)
         {
             _context = context;
+            _localizer = localizer;
         }
 
         // GET: api/Shoppings
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Shopping>>> GetShoppings()
         {
-            return await _context.Shoppings
+            var shopping = await _context.Shoppings
                 .Include(s => s.IdUserNavigation)
                 .Include(s => s.PurchaseDetails)
                     .ThenInclude(pd => pd.IdGameNavigation)
                 .ToListAsync();
+
+            if (shopping == null || shopping.Count == 0)
+            {
+                return NotFound(new { message = _localizer["ShoppingNotFound"] });
+            }
+
+            return Ok(shopping);
         }
 
         // GET: api/Shoppings/5
@@ -46,9 +55,9 @@ namespace GameVerse.Controllers
                 .FirstOrDefaultAsync(s => s.IdBuy == id);
 
             if (shopping == null)
-                return NotFound();
+                return NotFound(new { message = _localizer["ShoppingNotFound"] });
 
-            return shopping;
+            return Ok(shopping);
         }
 
         [HttpGet("history/{idUser}")]
@@ -56,7 +65,7 @@ namespace GameVerse.Controllers
         {
             var user = await _context.Users.FindAsync(idUser);
             if (user == null)
-                return NotFound("Usuario no encontrado.");
+                return NotFound(new { message = _localizer["UserNotFound"] });
 
             var history = await _context.Shoppings
                 .Where(s => s.IdUser == idUser)
@@ -64,7 +73,12 @@ namespace GameVerse.Controllers
                     .ThenInclude(p => p.IdGameNavigation)
                 .ToListAsync();
 
-            return history;
+            if (!history.Any())
+            {
+                return NotFound(new { message = _localizer["NoPurchasesFound"] });
+            }
+
+            return Ok(history);
         }
 
         // PUT: api/Shoppings/5
@@ -72,7 +86,7 @@ namespace GameVerse.Controllers
         public async Task<IActionResult> UpdateShopping(int id, Shopping shopping)
         {
             if (id != shopping.IdBuy)
-                return BadRequest();
+                return BadRequest(new { message = _localizer["ShoppingIdMismatch"] });
 
             _context.Entry(shopping).State = EntityState.Modified;
 
@@ -83,12 +97,12 @@ namespace GameVerse.Controllers
             catch (DbUpdateConcurrencyException)
             {
                 if (!ShoppingExists(id))
-                    return NotFound();
+                    return NotFound(new { message = _localizer["ShoppingNotFound"] });
                 else
                     throw;
             }
 
-            return NoContent();
+            return Ok(new { message = _localizer["ShoppingUpdated"] });
         }
 
         // POST: api/Shoppings/checkout/5
@@ -97,7 +111,7 @@ namespace GameVerse.Controllers
         {
             var user = await _context.Users.FindAsync(idUser);
             if (user == null)
-                return NotFound("Usuario no encontrado.");
+                return NotFound(new { message = _localizer["UserNotFound"] });
 
             var cart = await _context.ShoppingCarts
                 .Include(c => c.IdGameNavigation)
@@ -105,7 +119,9 @@ namespace GameVerse.Controllers
                 .ToListAsync();
 
             if (!cart.Any())
-                return BadRequest("El carrito está vacío.");
+            {
+                return BadRequest(new { message = _localizer["CartEmpty"] });
+            }
 
             var shopping = new Shopping
             {
@@ -138,7 +154,7 @@ namespace GameVerse.Controllers
             _context.ShoppingCarts.RemoveRange(cart);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetShoppingById), new { id = shopping.IdBuy }, shopping);
+            return CreatedAtAction(nameof(GetShoppingById), new { id = shopping.IdBuy }, new { message = _localizer["PurchaseCompleted"], data = shopping });
         }
 
         // DELETE: api/Shoppings/5
@@ -148,12 +164,12 @@ namespace GameVerse.Controllers
             var shopping = await _context.Shoppings.FindAsync(id);
 
             if (shopping == null)
-                return NotFound();
+                return NotFound(new { message = _localizer["ShoppingNotFound"] });
 
             _context.Shoppings.Remove(shopping);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok(new { message = _localizer["ShoppingDeleted"] });
         }
 
         private bool ShoppingExists(int id)
