@@ -8,7 +8,6 @@ namespace GameVerseSQL.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "admin")]
     public class GamesController : ControllerBase
     {
         private readonly GameVerseDbContext _context;
@@ -18,32 +17,38 @@ namespace GameVerseSQL.Controllers
             _context = context;
         }
 
-        // GET: api/games
+       
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Game>>> GetGames()
         {
             return await _context.Games.Include(g => g.IdCategories).ToListAsync();
         }
 
-        // GET: api/games/5
+     
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<Game>> GetById(int id)
         {
-            var game = await _context.Games.Include(g => g.IdCategories).FirstOrDefaultAsync(g => g.IdGame == id);
+            var game = await _context.Games
+                .Include(g => g.IdCategories)
+                .FirstOrDefaultAsync(g => g.IdGame == id);
 
             if (game == null)
-            {
                 return NotFound();
-            }
 
             return game;
         }
 
-        // POST: api/games
+        
         [HttpPost]
+        [Authorize(Roles = "admin")]
         public async Task<ActionResult<Game>> StoreGame(Game game, [FromQuery] List<int> idCategories)
         {
-            var categories = await _context.Categories.Where(c => idCategories.Contains(c.IdCategory)).ToListAsync();
+            var categories = await _context.Categories
+                .Where(c => idCategories.Contains(c.IdCategory))
+                .ToListAsync();
+
             game.IdCategories = categories;
 
             _context.Games.Add(game);
@@ -52,45 +57,45 @@ namespace GameVerseSQL.Controllers
             return CreatedAtAction(nameof(GetById), new { id = game.IdGame }, game);
         }
 
-        // PUT: api/games/5
+      
         [HttpPut("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> UpdateGame(int id, Game game, [FromQuery] List<int> idCategories)
         {
             if (id != game.IdGame)
-            {
                 return BadRequest("ID no coincide.");
-            }
 
-            var existingGame = await _context.Games.Include(g => g.IdCategories).FirstOrDefaultAsync(g => g.IdGame == id);
+            var existingGame = await _context.Games
+                .Include(g => g.IdCategories)
+                .FirstOrDefaultAsync(g => g.IdGame == id);
 
             if (existingGame == null)
-            {
                 return NotFound();
 
-                existingGame.Name = game.Name;
-                existingGame.Description = game.Description;
-                existingGame.Title = game.Title;
-                existingGame.Url = game.Url;
-                existingGame.Image = game.Image;
-                existingGame.PriceBuy = game.PriceBuy;
-                existingGame.PriceRental = game.PriceRental;
-                existingGame.IdCategories = await _context.Categories.Where(c => idCategories.Contains(c.IdCategory)).ToListAsync();
-            }
+            existingGame.Name = game.Name;
+            existingGame.Description = game.Description;
+            existingGame.Title = game.Title;
+            existingGame.Url = game.Url;
+            existingGame.Image = game.Image;
+            existingGame.PriceBuy = game.PriceBuy;
+            existingGame.PriceRental = game.PriceRental;
+            existingGame.IdCategories = await _context.Categories
+                .Where(c => idCategories.Contains(c.IdCategory))
+                .ToListAsync();
 
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // DELETE: api/games/5
+       
         [HttpDelete("{id}")]
+        [Authorize(Roles = "admin")]
         public async Task<IActionResult> DeleteGame(int id)
         {
             var game = await _context.Games.FindAsync(id);
             if (game == null)
-            {
                 return NotFound();
-            }
 
             _context.Games.Remove(game);
             await _context.SaveChangesAsync();
@@ -98,10 +103,14 @@ namespace GameVerseSQL.Controllers
             return NoContent();
         }
 
+        
         [HttpGet("search")]
-        public async Task<ActionResult<IEnumerable<Game>>> SearchGames(String name, bool exact = false, int? idCategory = null)
+        [AllowAnonymous]
+        public async Task<ActionResult<IEnumerable<Game>>> SearchGames(string name, bool exact = false, int? idCategory = null)
         {
-            IQueryable<Game> query = exact ? _context.Games.Where(g => g.Name == name) : _context.Games.Where(g => g.Name.Contains(name));
+            IQueryable<Game> query = exact
+                ? _context.Games.Where(g => g.Name == name)
+                : _context.Games.Where(g => g.Name.Contains(name));
 
             if (idCategory != null)
             {
@@ -109,11 +118,12 @@ namespace GameVerseSQL.Controllers
             }
 
             var result = await query.Include(g => g.IdCategories).ToListAsync();
-
             return result;
         }
 
+        
         [HttpGet("category")]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<Game>>> FilterByCategory([FromQuery] int idCategory)
         {
             var games = await _context.Games
@@ -122,9 +132,8 @@ namespace GameVerseSQL.Controllers
                 .ToListAsync();
 
             if (games == null || !games.Any())
-            {
                 return NotFound();
-            }
+
             return games;
         }
     }
