@@ -51,6 +51,9 @@ function LoginForm() {
 
             
             localStorage.setItem("token", data.token);
+            localStorage.setItem("userId", data.idUser);
+            localStorage.setItem("username", data.username);
+
 
             alert("Inicio de sesión exitoso.");
             window.location.href = "/home";

@@ -53,8 +53,15 @@ namespace GameVerse.Controllers
                 return Unauthorized("Credenciales inválidas.");
 
             var token = _jwtService.GenerateToken(user);
-            return Ok(new { token });
+
+            return Ok(new
+            {
+                token,
+                idUser = user.IdUser,
+                username = user.Username 
+            });
         }
+
 
         // Encripta la contraseña usando SHA256 (puedes cambiar a BCrypt si quieres más seguridad)
         private string HashPassword(string password)
